@@ -1,0 +1,37 @@
+{
+    "manifest_version" : 2,
+    "version" : "0.0.1",
+    "name" : "AmzonXtra",
+    "description" : "Messaging Extension",
+    "icons": {
+        "128": "/assets/img/logo.png",
+        "48": "/assets/img/logo.png",
+        "32": "/assets/img/logo.png",
+        "16": "/assets/img/logo.png"
+    },
+    "browser_action" : {
+        "default_icon" : "/assets/img/logo.png",
+        "default_popup" : "/assets/html/popup.html" ,
+        "default_title": "Message Passing"
+    },
+    "content_scripts" : [
+        {
+            "matches" : ["<all_urls>"],
+            "js" : ["assets/js/lib/jquery-3.4.1.min.js","assets/js/lib/jquery-ui.min.js","/assets/js/content.js"]
+        }
+    ],
+    "background" : {
+        "persistent": false,
+		"scripts": ["assets/js/lib/jquery-3.4.1.min.js","assets/js/lib/jquery-ui.min.js","/assets/js/background.js"]
+    },
+    
+    "permission" : [
+        "scripting","tabs",
+        "https://www.google.com/",
+        "http://127.0.0.1:8000/",
+        "http://*/*", "https://*/*","*://*.amazon.com/*", "*://*.amazon.co.uk/*", "*://*.amazon.de/*", "*://*.amazon.cn/*", "*://*.amazon.it/*", "*://*.amazon.es/*", "*://*.amazon.co.jp/*", "*://*.amazon.ca/*", "*://*.amazon.fr/*", "*://*.amazon.in/*", "*://*.amazon.com.mx/*", "*://*.amazon.com.br/*"
+    ],
+    "externally_connectable": {
+        "matches": ["*://localhost/*", "*://your.domain.com/*"]
+    }
+}
