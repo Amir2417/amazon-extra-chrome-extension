@@ -2,7 +2,7 @@ console.log("Its BackGround");
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse)  {
     cAjax = new XMLHttpRequest();
-    console.log(cAjax)
+    console.log(request.url);
      var method = 'GET';
     if(request.method){
         method=request.method.toUpperCase(); 

@@ -30,12 +30,15 @@ function request_response_hanlder(response){
              let itemData=WpasExLoader.extractItemData(item);
              console.log(itemData);
              if(itemData.asin!=null){
-                 itemHtml+=WpasExLoader.searchItemDom(itemData);
+                //  itemHtml+=WpasExLoader.searchItemDom(itemData);
+                console.log(itemData.asin);
+                console.log(itemData.url);
+                
+                chrome.runtime.sendMessage({url:itemData.url, type:'details',asin:itemData.asin,thumb:itemData.thumb,price:itemData.price,item:itemData}, WpasExHelper.detailsResponseHadler);
 
-                 chrome.runtime.sendMessage({url:itemData.url, type:'details',asin:itemData.asin,thumb:itemData.thumb,price:itemData.price,item:itemData}, WpasExHelper.detailsResponseHadler);
-
-                 console.log(itemData.asin);
+                 
              }
+             
          });
      }else{
           itemHtml+="No Products Found!";
@@ -52,19 +55,20 @@ let WpasExtFormatter={
     getBody:function (result) {
         let bodyHtml="<div>";
         let title=WpasExtFormatter.getTitle(result);
-        let images=WpasExtFormatter.getImages(result);
-        let attrs=WpasExtFormatter.getAttrs(result);
-        let brand=WpasExtFormatter.getBrand(result);
-        let author=WpasExtFormatter.getAuthor(result);
-        let amznPrice=WpasExtFormatter.getAznPrice(result);
-        let listPrice=WpasExtFormatter.getListPrice(result);
-        let desc=WpasExtFormatter.getDesc(result);
-        let shortDesc=WpasExtFormatter.getShortDesc(result);
-        let cat=WpasExtFormatter.getCat(result);
-        let spec=WpasExtFormatter.getSpec(result);
-        bodyHtml+=title+attrs+images+brand+author+amznPrice+listPrice+desc+shortDesc+cat+spec;
+        // let images=WpasExtFormatter.getImages(result);
+        // let attrs=WpasExtFormatter.getAttrs(result);
+        // let brand=WpasExtFormatter.getBrand(result);
+        // let author=WpasExtFormatter.getAuthor(result);
+        // let amznPrice=WpasExtFormatter.getAznPrice(result);
+        // let listPrice=WpasExtFormatter.getListPrice(result);
+        // let desc=WpasExtFormatter.getDesc(result);
+        // let shortDesc=WpasExtFormatter.getShortDesc(result);
+        // let cat=WpasExtFormatter.getCat(result);
+        // let spec=WpasExtFormatter.getSpec(result);
+        // bodyHtml+=title+attrs+images+brand+author+amznPrice+listPrice+desc+shortDesc+cat+spec;
+        bodyHtml+=title;
         bodyHtml+="</div>";
-
+        
         return bodyHtml.replace(/(^[ \t]*\n)/gm, "");
     },
     getTitle:function (result) {
@@ -199,6 +203,7 @@ let WpasExtFormatter={
 let WpasExHelper={
     ajax: function (data) {
         return $.post(wpas_import_ext.ajax_url, data);//Ajax url,Data
+
     },
     preLoader: function () {
         return '<div class="wpas-ajax-pre-loader-container" ><img  class="wpas-ajax-pre-loader" src="' + wpas_import_ext.image_path + 'pre-loader.gif" alt="Loadding..." /></div>';
@@ -330,61 +335,61 @@ let WpasExHelper={
         //});
     },
     detailsResponseHadler:function(xHttpRes){
-        console.log(xHttpRes.result);
+        console.log(xHttpRes);
         let resFormmeter=WpasExtFormatter.getBody(xHttpRes.result);
-        console.log(resFormmeter);
+        // console.log(resFormmeter);
         // let resFormmeter=WpasExtFormatter.getImages(xHttpRes.result);
         // console.log('HTML :',resFormmeter);
         // return false;
         // Category
-        let wooCat="";
-        if ($('#wpas_import_link_woo_cat').is(':checked')) {
-            wooCat=$('#wpas_woo_category').val();
-        }
-        //Current button
-        let buttonDom = $(buttonDoms[parseInt(xHttpRes.item)]);
-        let item=parseInt(xHttpRes.item +1);
+        // let wooCat="";
+        // if ($('#wpas_import_link_woo_cat').is(':checked')) {
+        //     wooCat=$('#wpas_woo_category').val();
+        // }
+        // //Current button
+        // // let buttonDom = $(buttonDoms[parseInt(xHttpRes.item)]);
+        // // let item=parseInt(xHttpRes.item +1);
         let data = {
             'action': 'wpas_no_pa_product_insert_ext',
             'asin': xHttpRes.asin,
             'price': xHttpRes.price,
             'details':btoa(encodeURIComponent(resFormmeter)),
             'thumb':xHttpRes.thumb,
-            'category': wooCat,
+            
         };
         let request = WpasExHelper.ajax(data);
+        console.log(data);
         request.done(function (response) {
             console.log('response',response);
-
             if (response.status == 200) {
                 if (response.has_variation == true && wpas_import_ext.import_variation == 'on') {
-                    WpasExHelper.logList(response.sku, response.message, 'log-list-success', 'variable');
-                    WpasExHelper.logMessages(response.sku + ' variable product imported successfully! ', 'log-message-success');
-                    WpasExHelper.logMessages('Variation of ' + response.sku + ' are started to import... ', '');
+                    // WpasExHelper.logList(response.sku, response.message, 'log-list-success', 'variable');
+                    // WpasExHelper.logMessages(response.sku + ' variable product imported successfully! ', 'log-message-success');
+                    // WpasExHelper.logMessages('Variation of ' + response.sku + ' are started to import... ', '');
 
                     WpasExHelper.variationsSave(response.sku, response.parent_id, response.variations, 0);// starting variation insertion.
-                    buttonDom.parent().parent().remove();//remove and count need to work.
-                    WpasExHelper.selectProductCount();
+                    // buttonDom.parent().parent().remove();//remove and count need to work.
+                    // WpasExHelper.selectProductCount();
                     WpasExHelper.importRecur(item);
                 } else {
-                    WpasExHelper.logList(response.sku, response.message, 'log-list-success', 'simple');
-                    WpasExHelper.logMessages(response.sku + ' simple product imported successfully! ', 'log-message-success');
-                    buttonDom.parent().parent().remove();
-                    WpasExHelper.selectProductCount();
+                    // WpasExHelper.logList(response.sku, response.message, 'log-list-success', 'simple');
+                    // WpasExHelper.logMessages(response.sku + ' simple product imported successfully! ', 'log-message-success');
+                    // buttonDom.parent().parent().remove();
+                    // WpasExHelper.selectProductCount();
                     WpasExHelper.importRecur(item);
                 }
 
             } else {
-                WpasExHelper.logList(response.sku, response.message, 'log-list-fail', '');
-                WpasExHelper.logMessages(response.sku + ' can not be imported! ', 'log-message-fail');
-                buttonDom.parent().parent().remove();
-                WpasExHelper.selectProductCount();
+                // WpasExHelper.logList(response.sku, response.message, 'log-list-fail', '');
+                // WpasExHelper.logMessages(response.sku + ' can not be imported! ', 'log-message-fail');
+                // buttonDom.parent().parent().remove();
+                // WpasExHelper.selectProductCount();
                 WpasExHelper.importRecur(item);
             }
 
         }).fail(function (response) {
-            buttonDom.parent().parent().remove();
-            WpasExHelper.selectProductCount();
+            // buttonDom.parent().parent().remove();
+            // WpasExHelper.selectProductCount();
             WpasExHelper.importRecur(item);
         });
     },
