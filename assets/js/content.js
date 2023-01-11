@@ -22,19 +22,19 @@ function request_response_hanlder(response){
     //  console.log(response.status);
     //  console.log(response.sku);
     //  console.log(response.variations);
-     let items=$(response.result).find('.s-result-item')
+     let items=$(response.result).find('.s-asin')
      console.log(items.length);
      if(items.length>0){
          items.each(function (index) {
              let item = $(this);
              let itemData=WpasExLoader.extractItemData(item);
-             console.log(itemData);
+            //  console.log(itemData);
              if(itemData.asin!=null){
-                //  itemHtml+=WpasExLoader.searchItemDom(itemData);
-                console.log(itemData.asin);
+                // itemHtml+=WpasExLoader.searchItemDom(itemData);
+                // console.log(itemData.asin);
                 console.log(itemData.url);
                 
-                chrome.runtime.sendMessage({url:itemData.url, type:'details',asin:itemData.asin,thumb:itemData.thumb,price:itemData.price,item:itemData}, WpasExHelper.detailsResponseHadler);
+                chrome.runtime.sendMessage({url:itemData.url, type:'details',asin:itemData.asin}, WpasExHelper.detailsResponseHadler);
 
                  
              }
@@ -56,23 +56,24 @@ let WpasExtFormatter={
         let bodyHtml="<div>";
         let title=WpasExtFormatter.getTitle(result);
         // let images=WpasExtFormatter.getImages(result);
-        // let attrs=WpasExtFormatter.getAttrs(result);
+        let attrs=WpasExtFormatter.getAttrs(result);
         // let brand=WpasExtFormatter.getBrand(result);
         // let author=WpasExtFormatter.getAuthor(result);
-        // let amznPrice=WpasExtFormatter.getAznPrice(result);
+        let amznPrice=WpasExtFormatter.getAznPrice(result);
         // let listPrice=WpasExtFormatter.getListPrice(result);
         // let desc=WpasExtFormatter.getDesc(result);
         // let shortDesc=WpasExtFormatter.getShortDesc(result);
         // let cat=WpasExtFormatter.getCat(result);
         // let spec=WpasExtFormatter.getSpec(result);
         // bodyHtml+=title+attrs+images+brand+author+amznPrice+listPrice+desc+shortDesc+cat+spec;
-        bodyHtml+=title;
+        bodyHtml+=title+amznPrice+attrs;
         bodyHtml+="</div>";
         
         return bodyHtml.replace(/(^[ \t]*\n)/gm, "");
     },
     getTitle:function (result) {
         let titleHtml="";
+        
         if($(result).find('#productTitle').length>0){
             titleHtml+='<h2 id="productTitle">'+$(result).find('#productTitle').first().text().trim()+'</h2>';
         }else if($(result).find('#mas-title').length>0){
@@ -138,10 +139,10 @@ let WpasExtFormatter={
     },
     getAznPrice:function (result) {
         let amzPriceHtml="";
-        if($(result).find('#priceblock_ourprice').length>0){
-            amzPriceHtml+='<div id="priceblock_ourprice">'+$(result).find('#priceblock_ourprice').first().html()+'</div>';
-        }else if($(result).find('#priceblock_dealprice').length>0){
-            amzPriceHtml+='<div id="priceblock_dealprice">'+$(result).find('#priceblock_dealprice').first().html()+'</div>';
+        if($(result).find('#corePrice_desktop').length>0){
+            amzPriceHtml+='<div id="priceblock_ourprice">'+$(result).find('.apexPriceToPay').find('.a-offscreen').first().text()+'</div>';
+        }else if($(result).find('#corePriceDisplay_desktop_feature_div').length>0){
+            amzPriceHtml+='<div id="priceblock_dealprice">'+$(result).find('.reinventPricePriceToPayMargin').find('.a-offscreen').first().text()+'</div>';
         }
         return amzPriceHtml;
 
@@ -202,7 +203,9 @@ let WpasExtFormatter={
 //Helper
 let WpasExHelper={
     ajax: function (data) {
-        return $.post(wpas_import_ext.ajax_url, data);//Ajax url,Data
+        // console.log(data.url);
+        // return $.post(wpas_import_ext.ajax_url, data);//Ajax url,Data
+        return $.post(data.url);//Ajax url,Data
 
     },
     preLoader: function () {
@@ -335,8 +338,9 @@ let WpasExHelper={
         //});
     },
     detailsResponseHadler:function(xHttpRes){
-        console.log(xHttpRes);
+        // console.log(xHttpRes.result);
         let resFormmeter=WpasExtFormatter.getBody(xHttpRes.result);
+        console.log(resFormmeter);
         // console.log(resFormmeter);
         // let resFormmeter=WpasExtFormatter.getImages(xHttpRes.result);
         // console.log('HTML :',resFormmeter);
@@ -349,49 +353,51 @@ let WpasExHelper={
         // //Current button
         // // let buttonDom = $(buttonDoms[parseInt(xHttpRes.item)]);
         // // let item=parseInt(xHttpRes.item +1);
-        let data = {
-            'action': 'wpas_no_pa_product_insert_ext',
-            'asin': xHttpRes.asin,
-            'price': xHttpRes.price,
-            'details':btoa(encodeURIComponent(resFormmeter)),
-            'thumb':xHttpRes.thumb,
+        // let data = {
+        //     'action': 'wpas_no_pa_product_insert_ext',
+        //     'asin': xHttpRes.asin,
+        //     'price': xHttpRes.price,
+        //     'details':btoa(encodeURIComponent(resFormmeter)),
+        //     'thumb':xHttpRes.thumb,
+        //     'url':xHttpRes.item.url,
             
-        };
-        let request = WpasExHelper.ajax(data);
-        console.log(data);
-        request.done(function (response) {
-            console.log('response',response);
-            if (response.status == 200) {
-                if (response.has_variation == true && wpas_import_ext.import_variation == 'on') {
-                    // WpasExHelper.logList(response.sku, response.message, 'log-list-success', 'variable');
-                    // WpasExHelper.logMessages(response.sku + ' variable product imported successfully! ', 'log-message-success');
-                    // WpasExHelper.logMessages('Variation of ' + response.sku + ' are started to import... ', '');
+        // };
+        // let request = WpasExHelper.ajax(data);
+        // console.log(data);
+        // request.done(function (response) {
+        //     console.log('response',response);
+        //     if (response.status == 200) {
+        //         if (response.has_variation == true && wpas_import_ext.import_variation == 'on') {
+        //             // WpasExHelper.logList(response.sku, response.message, 'log-list-success', 'variable');
+        //             // WpasExHelper.logMessages(response.sku + ' variable product imported successfully! ', 'log-message-success');
+        //             // WpasExHelper.logMessages('Variation of ' + response.sku + ' are started to import... ', '');
 
-                    WpasExHelper.variationsSave(response.sku, response.parent_id, response.variations, 0);// starting variation insertion.
-                    // buttonDom.parent().parent().remove();//remove and count need to work.
-                    // WpasExHelper.selectProductCount();
-                    WpasExHelper.importRecur(item);
-                } else {
-                    // WpasExHelper.logList(response.sku, response.message, 'log-list-success', 'simple');
-                    // WpasExHelper.logMessages(response.sku + ' simple product imported successfully! ', 'log-message-success');
-                    // buttonDom.parent().parent().remove();
-                    // WpasExHelper.selectProductCount();
-                    WpasExHelper.importRecur(item);
-                }
+        //             WpasExHelper.variationsSave(response.sku, response.parent_id, response.variations, 0);// starting variation insertion.
+        //             // buttonDom.parent().parent().remove();//remove and count need to work.
+        //             // WpasExHelper.selectProductCount();
+        //             WpasExHelper.importRecur(item);
+        //         } else {
+        //             // WpasExHelper.logList(response.sku, response.message, 'log-list-success', 'simple');
+        //             // WpasExHelper.logMessages(response.sku + ' simple product imported successfully! ', 'log-message-success');
+        //             // buttonDom.parent().parent().remove();
+        //             // WpasExHelper.selectProductCount();
+        //             WpasExHelper.importRecur(item);
+        //         }
 
-            } else {
-                // WpasExHelper.logList(response.sku, response.message, 'log-list-fail', '');
-                // WpasExHelper.logMessages(response.sku + ' can not be imported! ', 'log-message-fail');
-                // buttonDom.parent().parent().remove();
-                // WpasExHelper.selectProductCount();
-                WpasExHelper.importRecur(item);
-            }
+        //     } else {
+        //         // WpasExHelper.logList(response.sku, response.message, 'log-list-fail', '');
+        //         // WpasExHelper.logMessages(response.sku + ' can not be imported! ', 'log-message-fail');
+        //         // buttonDom.parent().parent().remove();
+        //         // WpasExHelper.selectProductCount();
+        //         WpasExHelper.importRecur(item);
+        //     }
 
-        }).fail(function (response) {
-            // buttonDom.parent().parent().remove();
-            // WpasExHelper.selectProductCount();
-            WpasExHelper.importRecur(item);
-        });
+        // }).fail(function (response) {
+        //     // buttonDom.parent().parent().remove();
+        //     // WpasExHelper.selectProductCount();
+        //     // console.log("failed");
+        //     WpasExHelper.importRecur(item);
+        // });
     },
     importRecur : function(item){
         //Current button
@@ -515,10 +521,11 @@ let WpasExLoader={
         //console.log(product)
         let titleUrl=product.find('a').attr('href');
         let asin=WpasExLoader.findASINWithURL(titleUrl);
-        let url='https://www.amazon.com'+titleUrl;
+        let url='https://www.amazon.com'+'/dp/'+asin;
         let thumb=product.find('img').attr('src');
         let price=product.find('.a-price>span').first().text();
-        return {'asin':asin, 'title':title.trim(), 'url':url, 'thumb':thumb, 'price':price,'titleUrl':titleUrl};
+        return {'asin':asin,  'url':url };
+        // return {'asin':asin, 'title':title.trim(), 'url':url, 'thumb':thumb, 'price':price,'titleUrl':titleUrl};
     },
     searchItemDom:function(item){
         return'<div class="acl-col-md-2-ex">\n' +
